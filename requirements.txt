@@ -7,5 +7,8 @@ grpcio-tools==1.60.0
 # System monitoring
 psutil==5.9.6
 
+# Network interface detection (optional, for better Tailscale detection)
+netifaces==0.11.0
+
 # Utilities
 python-dateutil==2.8.2

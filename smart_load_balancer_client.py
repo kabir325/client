@@ -55,20 +55,113 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
         return f"client-{hostname}-{str(uuid.uuid4())[:8]}"
     
     def _get_local_ip(self) -> str:
-        """Get local IP address"""
+        """Get Tailscale IP address for server communication"""
+        # Try to get Tailscale IP first
+        tailscale_ip = self._get_tailscale_ip()
+        if tailscale_ip:
+            logger.info(f"🌐 Using Tailscale IP: {tailscale_ip}")
+            return tailscale_ip
+        
+        # Fallback to server-route detection
         try:
+            server_host = self.server_address.split(':')[0]
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                s.connect(("8.8.8.8", 80))
-                return s.getsockname()[0]
+                s.connect((server_host, 80))
+                client_ip = s.getsockname()[0]
+                logger.info(f"🌐 Detected client IP for server communication: {client_ip}")
+                return client_ip
         except:
-            return "127.0.0.1"
+            # Final fallback to general internet route
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                    s.connect(("8.8.8.8", 80))
+                    fallback_ip = s.getsockname()[0]
+                    logger.warning(f"⚠️  Using fallback IP: {fallback_ip}")
+                    return fallback_ip
+            except:
+                logger.error("❌ Could not determine reachable IP, using localhost")
+                return "127.0.0.1"
+    
+    def _get_tailscale_ip(self) -> Optional[str]:
+        """Get Tailscale IP address"""
+        try:
+            # Method 1: Use tailscale command
+            result = subprocess.run(['tailscale', 'ip', '-4'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                tailscale_ip = result.stdout.strip()
+                if tailscale_ip and self._is_valid_ip(tailscale_ip):
+                    logger.info(f"✅ Found Tailscale IP via command: {tailscale_ip}")
+                    return tailscale_ip
+        except:
+            pass
+        
+        # Method 2: Check network interfaces for Tailscale IP ranges
+        try:
+            import netifaces
+            for interface in netifaces.interfaces():
+                if 'tailscale' in interface.lower() or 'utun' in interface.lower():
+                    addrs = netifaces.ifaddresses(interface)
+                    if netifaces.AF_INET in addrs:
+                        for addr_info in addrs[netifaces.AF_INET]:
+                            ip = addr_info.get('addr')
+                            if ip and self._is_tailscale_ip(ip):
+                                logger.info(f"✅ Found Tailscale IP via interface {interface}: {ip}")
+                                return ip
+        except ImportError:
+            pass
+        except:
+            pass
+        
+        # Method 3: Check common Tailscale IP ranges manually
+        try:
+            import socket
+            hostname = socket.gethostname()
+            ip_list = socket.gethostbyname_ex(hostname)[2]
+            for ip in ip_list:
+                if self._is_tailscale_ip(ip):
+                    logger.info(f"✅ Found Tailscale IP via hostname lookup: {ip}")
+                    return ip
+        except:
+            pass
+        
+        logger.warning("⚠️  Could not detect Tailscale IP")
+        return None
+    
+    def _is_valid_ip(self, ip: str) -> bool:
+        """Check if string is a valid IP address"""
+        try:
+            socket.inet_aton(ip)
+            return True
+        except:
+            return False
+    
+    def _is_tailscale_ip(self, ip: str) -> bool:
+        """Check if IP is in Tailscale range"""
+        try:
+            # Tailscale uses 100.64.0.0/10 range (100.64.0.0 to 100.127.255.255)
+            parts = ip.split('.')
+            if len(parts) != 4:
+                return False
+            
+            first_octet = int(parts[0])
+            second_octet = int(parts[1])
+            
+            # Check if in 100.64.0.0/10 range
+            if first_octet == 100 and 64 <= second_octet <= 127:
+                return True
+            
+            return False
+        except:
+            return False
     
     def _discover_local_models(self) -> None:
         """Discover available local Ollama models"""
         try:
             logger.info("🔍 Discovering local models...")
             result = subprocess.run(['ollama', 'list'], 
-                                  capture_output=True, text=True, timeout=10)
+                                  capture_output=True, text=True, timeout=10,
+                                  encoding='utf-8', errors='ignore')
             
             if result.returncode == 0:
                 lines = result.stdout.strip().split('\n')[1:]  # Skip header
@@ -117,7 +210,8 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
             )
             
             logger.info("📡 Registering with smart server...")
-            response = stub.RegisterClient(request, timeout=15)
+            logger.info(f"🌐 Attempting connection to {self.server_address}")
+            response = stub.RegisterClient(request, timeout=30)
             
             if response.success:
                 self.assigned_model = response.assigned_model
@@ -159,12 +253,16 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
             
             try:
                 result = subprocess.run(['ollama', 'pull', self.assigned_model], 
-                                      capture_output=True, text=True, timeout=300)
+                                      capture_output=True, text=True, timeout=300, 
+                                      encoding='utf-8', errors='ignore')
                 if result.returncode == 0:
                     logger.info(f"✅ Successfully pulled {self.assigned_model}")
                     self.available_local_models.append(self.assigned_model)
                 else:
-                    logger.error(f"❌ Failed to pull {self.assigned_model}: {result.stderr}")
+                    error_msg = result.stderr.strip() if result.stderr else "Unknown error"
+                    logger.error(f"❌ Failed to pull {self.assigned_model}: {error_msg}")
+            except subprocess.TimeoutExpired:
+                logger.error(f"❌ Timeout pulling {self.assigned_model} (5 minutes)")
             except Exception as e:
                 logger.error(f"❌ Error pulling model: {e}")
     
@@ -467,6 +565,9 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
         logger.info(f"🌐 Smart client server listening on port 50052")
         logger.info("✅ Ready to receive AI requests from smart server")
         
+        # Test if server can reach us
+        self._test_server_connectivity()
+        
         self._running = True
         
         try:
@@ -485,6 +586,21 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
             return f"{parameters // 1_000_000}M parameters"
         else:
             return f"{parameters} parameters"
+    
+    def _test_server_connectivity(self):
+        """Test if server can reach this client"""
+        try:
+            local_ip = self._get_local_ip()
+            logger.info(f"🔍 Testing if server can reach client at {local_ip}:50052")
+            
+            # Create a simple test message
+            logger.info("💡 If connection fails, check:")
+            logger.info("   • Firewall allows port 50052")
+            logger.info("   • Client and server on same network/VPN")
+            logger.info("   • Router/NAT configuration")
+            
+        except Exception as e:
+            logger.warning(f"⚠️  Connectivity test failed: {e}")
     
     def run(self):
         """Main client run method"""
