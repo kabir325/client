@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package loadbalancer;
+
+// Smart Load Balancer Service v3.0
+service LoadBalancer {
+    // Client registration with smart model assignment
+    rpc RegisterClient(ClientInfo) returns (RegistrationResponse);
+    
+    // Process AI request
+    rpc ProcessAIRequest(AIRequest) returns (AIResponse);
+    
+    // Get processing status (for progress tracking)
+    rpc GetProcessingStatus(StatusRequest) returns (StatusResponse);
+    
+    // Health check
+    rpc HealthCheck(Empty) returns (HealthResponse);
+    
+    // Get available models (for client verification)
+    rpc GetAvailableModels(Empty) returns (AvailableModelsResponse);
+    
+    // Reassign models (for dynamic rebalancing)
+    rpc ReassignModels(Empty) returns (ReassignmentResponse);
+}
+
+// Empty message
+message Empty {}
+
+// Client information
+message ClientInfo {
+    string client_id = 1;
+    string hostname = 2;
+    string ip_address = 3;
+    SystemSpecs specs = 4;
+}
+
+// System specifications
+message SystemSpecs {
+    int32 cpu_cores = 1;
+    float cpu_frequency_ghz = 2;
+    int64 ram_gb = 3;
+    string gpu_info = 4;
+    float gpu_memory_gb = 5;
+    string os_info = 6;
+    float performance_score = 7;
+}
+
+// Registration response
+message RegistrationResponse {
+    bool success = 1;
+    string message = 2;
+    string assigned_model = 3;
+    ModelInfo model_info = 4;
+    int32 total_clients = 5;
+    int32 client_group = 6;
+}
+
+// Model information
+message ModelInfo {
+    string name = 1;
+    int64 parameters = 2;
+    float size_gb = 3;
+    int32 complexity_score = 4;
+}
+
+// Available models response
+message AvailableModelsResponse {
+    repeated ModelInfo models = 1;
+    int32 total_models = 2;
+}
+
+// Reassignment response
+message ReassignmentResponse {
+    bool success = 1;
+    string message = 2;
+    repeated ClientAssignment new_assignments = 3;
+}
+
+// Client assignment
+message ClientAssignment {
+    string client_id = 1;
+    string assigned_model = 2;
+    int32 group_number = 3;
+}
+
+// AI Request
+message AIRequest {
+    string request_id = 1;
+    string prompt = 2;
+    string assigned_model = 3;
+    int64 timestamp = 4;
+}
+
+// AI Response
+message AIResponse {
+    string request_id = 1;
+    bool success = 2;
+    string response_text = 3;
+    float processing_time = 4;
+    string client_id = 5;
+    string model_used = 6;
+    int64 timestamp = 7;
+}
+
+// Status request for progress tracking
+message StatusRequest {
+    string request_id = 1;
+    string client_id = 2;
+}
+
+// Status response for progress tracking
+message StatusResponse {
+    string request_id = 1;
+    string client_id = 2;
+    ProcessingStatus status = 3;
+    float progress_percentage = 4;
+    string current_step = 5;
+    int64 estimated_remaining_seconds = 6;
+}
+
+// Processing status enum
+enum ProcessingStatus {
+    IDLE = 0;
+    STARTING = 1;
+    PROCESSING = 2;
+    FINALIZING = 3;
+    COMPLETED = 4;
+    ERROR = 5;
+}
+
+// Health check response
+message HealthResponse {
+    bool healthy = 1;
+    string message = 2;
+    int32 connected_clients = 3;
+    int32 active_models = 4;
+}

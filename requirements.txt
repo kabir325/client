@@ -1,0 +1,11 @@
+# Smart AI Load Balancer Client v3.0 Requirements
+
+# Core gRPC
+grpcio==1.60.0
+grpcio-tools==1.60.0
+
+# System monitoring
+psutil==5.9.6
+
+# Utilities
+python-dateutil==2.8.2
