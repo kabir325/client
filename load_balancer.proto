@@ -21,6 +21,15 @@ service LoadBalancer {
     
     // Reassign models (for dynamic rebalancing)
     rpc ReassignModels(Empty) returns (ReassignmentResponse);
+    
+    // RAG operations
+    rpc AddDocument(AddDocumentRequest) returns (AddDocumentResponse);
+    rpc SearchDocuments(SearchDocumentsRequest) returns (SearchDocumentsResponse);
+    
+    // Chat history operations
+    rpc CreateChatSession(CreateChatSessionRequest) returns (CreateChatSessionResponse);
+    rpc GetChatSessions(GetChatSessionsRequest) returns (GetChatSessionsResponse);
+    rpc GetChatHistory(GetChatHistoryRequest) returns (GetChatHistoryResponse);
 }
 
 // Empty message
@@ -89,6 +98,9 @@ message AIRequest {
     string prompt = 2;
     string assigned_model = 3;
     int64 timestamp = 4;
+    repeated ImageData images = 5;  // Support for multimodal input
+    string chat_session_id = 6;  // For chat history tracking
+    repeated string context_documents = 7;  // RAG context
 }
 
 // AI Response
@@ -134,4 +146,87 @@ message HealthResponse {
     string message = 2;
     int32 connected_clients = 3;
     int32 active_models = 4;
+}
+
+// Image data for multimodal support
+message ImageData {
+    string image_base64 = 1;  // Base64 encoded image
+    string mime_type = 2;  // e.g., "image/jpeg", "image/png"
+    string filename = 3;  // Optional filename
+}
+
+// Document for RAG
+message Document {
+    string doc_id = 1;
+    string content = 2;
+    string title = 3;
+    map<string, string> metadata = 4;
+    int64 timestamp = 5;
+}
+
+// Chat message
+message ChatMessage {
+    string message_id = 1;
+    string session_id = 2;
+    string role = 3;  // "user" or "assistant"
+    string content = 4;
+    int64 timestamp = 5;
+    repeated ImageData images = 6;
+}
+
+// Chat session
+message ChatSession {
+    string session_id = 1;
+    string title = 2;
+    repeated ChatMessage messages = 3;
+    int64 created_at = 4;
+    int64 updated_at = 5;
+}
+
+// RAG operations
+message AddDocumentRequest {
+    Document document = 1;
+}
+
+message AddDocumentResponse {
+    bool success = 1;
+    string message = 2;
+    string doc_id = 3;
+}
+
+message SearchDocumentsRequest {
+    string query = 1;
+    int32 top_k = 2;  // Number of results to return
+}
+
+message SearchDocumentsResponse {
+    repeated Document documents = 1;
+    repeated float scores = 2;
+}
+
+// Chat history operations
+message GetChatSessionsRequest {
+    int32 limit = 1;
+}
+
+message GetChatSessionsResponse {
+    repeated ChatSession sessions = 1;
+}
+
+message GetChatHistoryRequest {
+    string session_id = 1;
+}
+
+message GetChatHistoryResponse {
+    ChatSession session = 1;
+    bool success = 2;
+}
+
+message CreateChatSessionRequest {
+    string title = 1;
+}
+
+message CreateChatSessionResponse {
+    string session_id = 1;
+    bool success = 2;
 }

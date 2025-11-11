@@ -10,6 +10,10 @@ import os
 def generate_grpc_files():
     """Generate gRPC Python files from proto definition"""
     try:
+        # Change to client directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(script_dir)
+        
         cmd = [
             sys.executable, "-m", "grpc_tools.protoc",
             "--proto_path=.",

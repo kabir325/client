@@ -24,15 +24,17 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13load_balancer.proto\x12\x0cloadbalancer\"\x07\n\x05\x45mpty\"o\n\nClientInfo\x12\x11\n\tclient_id\x18\x01 \x01(\t\x12\x10\n\x08hostname\x18\x02 \x01(\t\x12\x12\n\nip_address\x18\x03 \x01(\t\x12(\n\x05specs\x18\x04 \x01(\x0b\x32\x19.loadbalancer.SystemSpecs\"\xa0\x01\n\x0bSystemSpecs\x12\x11\n\tcpu_cores\x18\x01 \x01(\x05\x12\x19\n\x11\x63pu_frequency_ghz\x18\x02 \x01(\x02\x12\x0e\n\x06ram_gb\x18\x03 \x01(\x03\x12\x10\n\x08gpu_info\x18\x04 \x01(\t\x12\x15\n\rgpu_memory_gb\x18\x05 \x01(\x02\x12\x0f\n\x07os_info\x18\x06 \x01(\t\x12\x19\n\x11performance_score\x18\x07 \x01(\x02\"\xaa\x01\n\x14RegistrationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x16\n\x0e\x61ssigned_model\x18\x03 \x01(\t\x12+\n\nmodel_info\x18\x04 \x01(\x0b\x32\x17.loadbalancer.ModelInfo\x12\x15\n\rtotal_clients\x18\x05 \x01(\x05\x12\x14\n\x0c\x63lient_group\x18\x06 \x01(\x05\"X\n\tModelInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x12\n\nparameters\x18\x02 \x01(\x03\x12\x0f\n\x07size_gb\x18\x03 \x01(\x02\x12\x18\n\x10\x63omplexity_score\x18\x04 \x01(\x05\"X\n\x17\x41vailableModelsResponse\x12\'\n\x06models\x18\x01 \x03(\x0b\x32\x17.loadbalancer.ModelInfo\x12\x14\n\x0ctotal_models\x18\x02 \x01(\x05\"q\n\x14ReassignmentResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x37\n\x0fnew_assignments\x18\x03 \x03(\x0b\x32\x1e.loadbalancer.ClientAssignment\"S\n\x10\x43lientAssignment\x12\x11\n\tclient_id\x18\x01 \x01(\t\x12\x16\n\x0e\x61ssigned_model\x18\x02 \x01(\t\x12\x14\n\x0cgroup_number\x18\x03 \x01(\x05\"Z\n\tAIRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0e\n\x06prompt\x18\x02 \x01(\t\x12\x16\n\x0e\x61ssigned_model\x18\x03 \x01(\t\x12\x11\n\ttimestamp\x18\x04 \x01(\x03\"\x9b\x01\n\nAIResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12\x15\n\rresponse_text\x18\x03 \x01(\t\x12\x17\n\x0fprocessing_time\x18\x04 \x01(\x02\x12\x11\n\tclient_id\x18\x05 \x01(\t\x12\x12\n\nmodel_used\x18\x06 \x01(\t\x12\x11\n\ttimestamp\x18\x07 \x01(\x03\"6\n\rStatusRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\tclient_id\x18\x02 \x01(\t\"\xbf\x01\n\x0eStatusResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\tclient_id\x18\x02 \x01(\t\x12.\n\x06status\x18\x03 \x01(\x0e\x32\x1e.loadbalancer.ProcessingStatus\x12\x1b\n\x13progress_percentage\x18\x04 \x01(\x02\x12\x14\n\x0c\x63urrent_step\x18\x05 \x01(\t\x12#\n\x1b\x65stimated_remaining_seconds\x18\x06 \x01(\x03\"d\n\x0eHealthResponse\x12\x0f\n\x07healthy\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x19\n\x11\x63onnected_clients\x18\x03 \x01(\x05\x12\x15\n\ractive_models\x18\x04 \x01(\x05*d\n\x10ProcessingStatus\x12\x08\n\x04IDLE\x10\x00\x12\x0c\n\x08STARTING\x10\x01\x12\x0e\n\nPROCESSING\x10\x02\x12\x0e\n\nFINALIZING\x10\x03\x12\r\n\tCOMPLETED\x10\x04\x12\t\n\x05\x45RROR\x10\x05\x32\xd6\x03\n\x0cLoadBalancer\x12N\n\x0eRegisterClient\x12\x18.loadbalancer.ClientInfo\x1a\".loadbalancer.RegistrationResponse\x12\x45\n\x10ProcessAIRequest\x12\x17.loadbalancer.AIRequest\x1a\x18.loadbalancer.AIResponse\x12P\n\x13GetProcessingStatus\x12\x1b.loadbalancer.StatusRequest\x1a\x1c.loadbalancer.StatusResponse\x12@\n\x0bHealthCheck\x12\x13.loadbalancer.Empty\x1a\x1c.loadbalancer.HealthResponse\x12P\n\x12GetAvailableModels\x12\x13.loadbalancer.Empty\x1a%.loadbalancer.AvailableModelsResponse\x12I\n\x0eReassignModels\x12\x13.loadbalancer.Empty\x1a\".loadbalancer.ReassignmentResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13load_balancer.proto\x12\x0cloadbalancer\"\x07\n\x05\x45mpty\"o\n\nClientInfo\x12\x11\n\tclient_id\x18\x01 \x01(\t\x12\x10\n\x08hostname\x18\x02 \x01(\t\x12\x12\n\nip_address\x18\x03 \x01(\t\x12(\n\x05specs\x18\x04 \x01(\x0b\x32\x19.loadbalancer.SystemSpecs\"\xa0\x01\n\x0bSystemSpecs\x12\x11\n\tcpu_cores\x18\x01 \x01(\x05\x12\x19\n\x11\x63pu_frequency_ghz\x18\x02 \x01(\x02\x12\x0e\n\x06ram_gb\x18\x03 \x01(\x03\x12\x10\n\x08gpu_info\x18\x04 \x01(\t\x12\x15\n\rgpu_memory_gb\x18\x05 \x01(\x02\x12\x0f\n\x07os_info\x18\x06 \x01(\t\x12\x19\n\x11performance_score\x18\x07 \x01(\x02\"\xaa\x01\n\x14RegistrationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x16\n\x0e\x61ssigned_model\x18\x03 \x01(\t\x12+\n\nmodel_info\x18\x04 \x01(\x0b\x32\x17.loadbalancer.ModelInfo\x12\x15\n\rtotal_clients\x18\x05 \x01(\x05\x12\x14\n\x0c\x63lient_group\x18\x06 \x01(\x05\"X\n\tModelInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x12\n\nparameters\x18\x02 \x01(\x03\x12\x0f\n\x07size_gb\x18\x03 \x01(\x02\x12\x18\n\x10\x63omplexity_score\x18\x04 \x01(\x05\"X\n\x17\x41vailableModelsResponse\x12\'\n\x06models\x18\x01 \x03(\x0b\x32\x17.loadbalancer.ModelInfo\x12\x14\n\x0ctotal_models\x18\x02 \x01(\x05\"q\n\x14ReassignmentResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x37\n\x0fnew_assignments\x18\x03 \x03(\x0b\x32\x1e.loadbalancer.ClientAssignment\"S\n\x10\x43lientAssignment\x12\x11\n\tclient_id\x18\x01 \x01(\t\x12\x16\n\x0e\x61ssigned_model\x18\x02 \x01(\t\x12\x14\n\x0cgroup_number\x18\x03 \x01(\x05\"\xb7\x01\n\tAIRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0e\n\x06prompt\x18\x02 \x01(\t\x12\x16\n\x0e\x61ssigned_model\x18\x03 \x01(\t\x12\x11\n\ttimestamp\x18\x04 \x01(\x03\x12\'\n\x06images\x18\x05 \x03(\x0b\x32\x17.loadbalancer.ImageData\x12\x17\n\x0f\x63hat_session_id\x18\x06 \x01(\t\x12\x19\n\x11\x63ontext_documents\x18\x07 \x03(\t\"\x9b\x01\n\nAIResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12\x15\n\rresponse_text\x18\x03 \x01(\t\x12\x17\n\x0fprocessing_time\x18\x04 \x01(\x02\x12\x11\n\tclient_id\x18\x05 \x01(\t\x12\x12\n\nmodel_used\x18\x06 \x01(\t\x12\x11\n\ttimestamp\x18\x07 \x01(\x03\"6\n\rStatusRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\tclient_id\x18\x02 \x01(\t\"\xbf\x01\n\x0eStatusResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\tclient_id\x18\x02 \x01(\t\x12.\n\x06status\x18\x03 \x01(\x0e\x32\x1e.loadbalancer.ProcessingStatus\x12\x1b\n\x13progress_percentage\x18\x04 \x01(\x02\x12\x14\n\x0c\x63urrent_step\x18\x05 \x01(\t\x12#\n\x1b\x65stimated_remaining_seconds\x18\x06 \x01(\x03\"d\n\x0eHealthResponse\x12\x0f\n\x07healthy\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x19\n\x11\x63onnected_clients\x18\x03 \x01(\x05\x12\x15\n\ractive_models\x18\x04 \x01(\x05\"F\n\tImageData\x12\x14\n\x0cimage_base64\x18\x01 \x01(\t\x12\x11\n\tmime_type\x18\x02 \x01(\t\x12\x10\n\x08\x66ilename\x18\x03 \x01(\t\"\xb6\x01\n\x08\x44ocument\x12\x0e\n\x06\x64oc_id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\x12\r\n\x05title\x18\x03 \x01(\t\x12\x36\n\x08metadata\x18\x04 \x03(\x0b\x32$.loadbalancer.Document.MetadataEntry\x12\x11\n\ttimestamp\x18\x05 \x01(\x03\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x90\x01\n\x0b\x43hatMessage\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x12\n\nsession_id\x18\x02 \x01(\t\x12\x0c\n\x04role\x18\x03 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\x12\x11\n\ttimestamp\x18\x05 \x01(\x03\x12\'\n\x06images\x18\x06 \x03(\x0b\x32\x17.loadbalancer.ImageData\"\x85\x01\n\x0b\x43hatSession\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12+\n\x08messages\x18\x03 \x03(\x0b\x32\x19.loadbalancer.ChatMessage\x12\x12\n\ncreated_at\x18\x04 \x01(\x03\x12\x12\n\nupdated_at\x18\x05 \x01(\x03\">\n\x12\x41\x64\x64\x44ocumentRequest\x12(\n\x08\x64ocument\x18\x01 \x01(\x0b\x32\x16.loadbalancer.Document\"G\n\x13\x41\x64\x64\x44ocumentResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0e\n\x06\x64oc_id\x18\x03 \x01(\t\"6\n\x16SearchDocumentsRequest\x12\r\n\x05query\x18\x01 \x01(\t\x12\r\n\x05top_k\x18\x02 \x01(\x05\"T\n\x17SearchDocumentsResponse\x12)\n\tdocuments\x18\x01 \x03(\x0b\x32\x16.loadbalancer.Document\x12\x0e\n\x06scores\x18\x02 \x03(\x02\"\'\n\x16GetChatSessionsRequest\x12\r\n\x05limit\x18\x01 \x01(\x05\"F\n\x17GetChatSessionsResponse\x12+\n\x08sessions\x18\x01 \x03(\x0b\x32\x19.loadbalancer.ChatSession\"+\n\x15GetChatHistoryRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\"U\n\x16GetChatHistoryResponse\x12*\n\x07session\x18\x01 \x01(\x0b\x32\x19.loadbalancer.ChatSession\x12\x0f\n\x07success\x18\x02 \x01(\x08\")\n\x18\x43reateChatSessionRequest\x12\r\n\x05title\x18\x01 \x01(\t\"@\n\x19\x43reateChatSessionResponse\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x0f\n\x07success\x18\x02 \x01(\x08*d\n\x10ProcessingStatus\x12\x08\n\x04IDLE\x10\x00\x12\x0c\n\x08STARTING\x10\x01\x12\x0e\n\nPROCESSING\x10\x02\x12\x0e\n\nFINALIZING\x10\x03\x12\r\n\tCOMPLETED\x10\x04\x12\t\n\x05\x45RROR\x10\x05\x32\xad\x07\n\x0cLoadBalancer\x12N\n\x0eRegisterClient\x12\x18.loadbalancer.ClientInfo\x1a\".loadbalancer.RegistrationResponse\x12\x45\n\x10ProcessAIRequest\x12\x17.loadbalancer.AIRequest\x1a\x18.loadbalancer.AIResponse\x12P\n\x13GetProcessingStatus\x12\x1b.loadbalancer.StatusRequest\x1a\x1c.loadbalancer.StatusResponse\x12@\n\x0bHealthCheck\x12\x13.loadbalancer.Empty\x1a\x1c.loadbalancer.HealthResponse\x12P\n\x12GetAvailableModels\x12\x13.loadbalancer.Empty\x1a%.loadbalancer.AvailableModelsResponse\x12I\n\x0eReassignModels\x12\x13.loadbalancer.Empty\x1a\".loadbalancer.ReassignmentResponse\x12R\n\x0b\x41\x64\x64\x44ocument\x12 .loadbalancer.AddDocumentRequest\x1a!.loadbalancer.AddDocumentResponse\x12^\n\x0fSearchDocuments\x12$.loadbalancer.SearchDocumentsRequest\x1a%.loadbalancer.SearchDocumentsResponse\x12\x64\n\x11\x43reateChatSession\x12&.loadbalancer.CreateChatSessionRequest\x1a\'.loadbalancer.CreateChatSessionResponse\x12^\n\x0fGetChatSessions\x12$.loadbalancer.GetChatSessionsRequest\x1a%.loadbalancer.GetChatSessionsResponse\x12[\n\x0eGetChatHistory\x12#.loadbalancer.GetChatHistoryRequest\x1a$.loadbalancer.GetChatHistoryResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'load_balancer_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_PROCESSINGSTATUS']._serialized_start=1477
-  _globals['_PROCESSINGSTATUS']._serialized_end=1577
+  _globals['_DOCUMENT_METADATAENTRY']._loaded_options = None
+  _globals['_DOCUMENT_METADATAENTRY']._serialized_options = b'8\001'
+  _globals['_PROCESSINGSTATUS']._serialized_start=2744
+  _globals['_PROCESSINGSTATUS']._serialized_end=2844
   _globals['_EMPTY']._serialized_start=37
   _globals['_EMPTY']._serialized_end=44
   _globals['_CLIENTINFO']._serialized_start=46
@@ -49,16 +51,46 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_REASSIGNMENTRESPONSE']._serialized_end=788
   _globals['_CLIENTASSIGNMENT']._serialized_start=790
   _globals['_CLIENTASSIGNMENT']._serialized_end=873
-  _globals['_AIREQUEST']._serialized_start=875
-  _globals['_AIREQUEST']._serialized_end=965
-  _globals['_AIRESPONSE']._serialized_start=968
-  _globals['_AIRESPONSE']._serialized_end=1123
-  _globals['_STATUSREQUEST']._serialized_start=1125
-  _globals['_STATUSREQUEST']._serialized_end=1179
-  _globals['_STATUSRESPONSE']._serialized_start=1182
-  _globals['_STATUSRESPONSE']._serialized_end=1373
-  _globals['_HEALTHRESPONSE']._serialized_start=1375
-  _globals['_HEALTHRESPONSE']._serialized_end=1475
-  _globals['_LOADBALANCER']._serialized_start=1580
-  _globals['_LOADBALANCER']._serialized_end=2050
+  _globals['_AIREQUEST']._serialized_start=876
+  _globals['_AIREQUEST']._serialized_end=1059
+  _globals['_AIRESPONSE']._serialized_start=1062
+  _globals['_AIRESPONSE']._serialized_end=1217
+  _globals['_STATUSREQUEST']._serialized_start=1219
+  _globals['_STATUSREQUEST']._serialized_end=1273
+  _globals['_STATUSRESPONSE']._serialized_start=1276
+  _globals['_STATUSRESPONSE']._serialized_end=1467
+  _globals['_HEALTHRESPONSE']._serialized_start=1469
+  _globals['_HEALTHRESPONSE']._serialized_end=1569
+  _globals['_IMAGEDATA']._serialized_start=1571
+  _globals['_IMAGEDATA']._serialized_end=1641
+  _globals['_DOCUMENT']._serialized_start=1644
+  _globals['_DOCUMENT']._serialized_end=1826
+  _globals['_DOCUMENT_METADATAENTRY']._serialized_start=1779
+  _globals['_DOCUMENT_METADATAENTRY']._serialized_end=1826
+  _globals['_CHATMESSAGE']._serialized_start=1829
+  _globals['_CHATMESSAGE']._serialized_end=1973
+  _globals['_CHATSESSION']._serialized_start=1976
+  _globals['_CHATSESSION']._serialized_end=2109
+  _globals['_ADDDOCUMENTREQUEST']._serialized_start=2111
+  _globals['_ADDDOCUMENTREQUEST']._serialized_end=2173
+  _globals['_ADDDOCUMENTRESPONSE']._serialized_start=2175
+  _globals['_ADDDOCUMENTRESPONSE']._serialized_end=2246
+  _globals['_SEARCHDOCUMENTSREQUEST']._serialized_start=2248
+  _globals['_SEARCHDOCUMENTSREQUEST']._serialized_end=2302
+  _globals['_SEARCHDOCUMENTSRESPONSE']._serialized_start=2304
+  _globals['_SEARCHDOCUMENTSRESPONSE']._serialized_end=2388
+  _globals['_GETCHATSESSIONSREQUEST']._serialized_start=2390
+  _globals['_GETCHATSESSIONSREQUEST']._serialized_end=2429
+  _globals['_GETCHATSESSIONSRESPONSE']._serialized_start=2431
+  _globals['_GETCHATSESSIONSRESPONSE']._serialized_end=2501
+  _globals['_GETCHATHISTORYREQUEST']._serialized_start=2503
+  _globals['_GETCHATHISTORYREQUEST']._serialized_end=2546
+  _globals['_GETCHATHISTORYRESPONSE']._serialized_start=2548
+  _globals['_GETCHATHISTORYRESPONSE']._serialized_end=2633
+  _globals['_CREATECHATSESSIONREQUEST']._serialized_start=2635
+  _globals['_CREATECHATSESSIONREQUEST']._serialized_end=2676
+  _globals['_CREATECHATSESSIONRESPONSE']._serialized_start=2678
+  _globals['_CREATECHATSESSIONRESPONSE']._serialized_end=2742
+  _globals['_LOADBALANCER']._serialized_start=2847
+  _globals['_LOADBALANCER']._serialized_end=3788
 # @@protoc_insertion_point(module_scope)
