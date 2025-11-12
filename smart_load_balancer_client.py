@@ -470,14 +470,24 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
             
             logger.info(f"🖼️  Processing with vision model: {model} ({len(images)} images)")
             
+            # Clean base64 images - remove data URL prefix if present
+            cleaned_images = []
+            for img in images:
+                if img.startswith('data:image'):
+                    # Remove "data:image/jpeg;base64," or similar prefix
+                    img = img.split(',', 1)[1] if ',' in img else img
+                cleaned_images.append(img)
+            
+            logger.info(f"📸 Cleaned {len(cleaned_images)} images for Ollama API")
+            
             # Prepare messages with images
             messages = [{
                 "role": "user",
                 "content": prompt,
-                "images": images  # Base64 encoded images
+                "images": cleaned_images  # Base64 encoded images (without data URL prefix)
             }]
             
-            # Call Ollama API
+            # Call Ollama API (no timeout - let it take as long as needed)
             response = requests.post(
                 "http://localhost:11434/api/chat",
                 json={
@@ -490,12 +500,15 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
             if response.status_code == 200:
                 result = response.json()
                 if "message" in result and "content" in result["message"]:
+                    logger.info("✅ Vision processing successful")
                     return result["message"]["content"]
                 else:
+                    logger.warning("Vision API returned no content")
                     return "Vision processing completed but no content returned"
             else:
-                logger.error(f"Ollama API error: {response.status_code}")
-                return f"Vision processing error: HTTP {response.status_code}"
+                error_text = response.text if response.text else "No error details"
+                logger.error(f"Ollama API error: {response.status_code} - {error_text}")
+                return f"Vision processing error: HTTP {response.status_code}. Please check if the model supports vision."
                 
         except Exception as e:
             logger.error(f"Error in vision processing: {e}")
