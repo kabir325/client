@@ -192,14 +192,24 @@ ollama pull llama3.2:3b
 ```
 
 ### Port 50052 Already in Use
+
+**Quick Fix (Windows):**
 ```bash
-# Windows
+# Run the kill script
+kill_client.bat
+```
+
+**Manual Fix:**
+```bash
+# Windows - Find and kill process
 netstat -ano | findstr :50052
 taskkill /PID <PID> /F
 
 # Linux/Mac
 lsof -ti:50052 | xargs kill -9
 ```
+
+**Common Cause:** Previous client instance still running. Always close properly with Ctrl+C.
 
 ### Server Can't Reach Client
 - Check firewall allows port 50052

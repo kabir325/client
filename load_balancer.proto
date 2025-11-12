@@ -21,6 +21,9 @@ service LoadBalancer {
     
     // Reassign models (for dynamic rebalancing)
     rpc ReassignModels(Empty) returns (ReassignmentResponse);
+    
+    // Process distributed request (server-side only)
+    rpc ProcessRequest(AIRequest) returns (AIResponse);
 }
 
 // Empty message
@@ -61,6 +64,7 @@ message ModelInfo {
     int64 parameters = 2;
     float size_gb = 3;
     int32 complexity_score = 4;
+    bool supports_vision = 5;  // Whether model supports image input
 }
 
 // Available models response
@@ -89,6 +93,7 @@ message AIRequest {
     string prompt = 2;
     string assigned_model = 3;
     int64 timestamp = 4;
+    repeated string images = 5;  // Base64 encoded images for vision models
 }
 
 // AI Response

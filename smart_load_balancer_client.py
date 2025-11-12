@@ -269,9 +269,12 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
     def ProcessAIRequest(self, request, context):
         """Process AI request from server with enhanced handling and progress tracking"""
         try:
+            images = list(request.images) if request.images else []
             logger.info(f"📥 Received AI request: {request.request_id}")
             logger.info(f"🤖 Prompt: {request.prompt[:100]}{'...' if len(request.prompt) > 100 else ''}")
             logger.info(f"📊 Using model: {request.assigned_model}")
+            if images:
+                logger.info(f"🖼️  Processing with {len(images)} images")
             
             # Initialize progress tracking
             with self._status_lock:
@@ -287,7 +290,7 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
             
             # Process with enhanced Ollama handling
             response_text = self._process_with_enhanced_ollama_tracked(
-                request.prompt, request.assigned_model, request.request_id
+                request.prompt, request.assigned_model, request.request_id, images
             )
             
             processing_time = time.time() - start_time
@@ -382,9 +385,12 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
             if request_id in self.current_requests:
                 del self.current_requests[request_id]
     
-    def _process_with_enhanced_ollama_tracked(self, prompt: str, model: str, request_id: str) -> str:
-        """Process prompt with progress tracking"""
+    def _process_with_enhanced_ollama_tracked(self, prompt: str, model: str, request_id: str, images: List[str] = None) -> str:
+        """Process prompt with progress tracking and optional image support"""
         try:
+            if images is None:
+                images = []
+                
             # Update status: Starting processing
             with self._status_lock:
                 if request_id in self.current_requests:
@@ -414,10 +420,16 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
                         'step': 'Running Ollama inference'
                     })
             
-            # Run Ollama command (no timeout - let it run as long as needed)
-            result = subprocess.run([
-                'ollama', 'run', model, prompt
-            ], capture_output=True, text=True, encoding='utf-8', errors='ignore')
+            # Build Ollama command
+            if images:
+                # For vision models, use Ollama API with images
+                response_text = self._process_with_ollama_vision(model, prompt, images)
+                return response_text
+            else:
+                # Standard text-only processing
+                result = subprocess.run([
+                    'ollama', 'run', model, prompt
+                ], capture_output=True, text=True, encoding='utf-8', errors='ignore')
             
             # Update status: Finalizing
             with self._status_lock:
@@ -449,9 +461,49 @@ class SmartLoadBalancerClient(load_balancer_pb2_grpc.LoadBalancerServicer):
             logger.error(f"Error running Ollama: {e}")
             return f"Processing error: {str(e)}"
     
+    def _process_with_ollama_vision(self, model: str, prompt: str, images: List[str]) -> str:
+        """Process prompt with images using Ollama API"""
+        try:
+            import json
+            import requests
+            import base64
+            
+            logger.info(f"🖼️  Processing with vision model: {model} ({len(images)} images)")
+            
+            # Prepare messages with images
+            messages = [{
+                "role": "user",
+                "content": prompt,
+                "images": images  # Base64 encoded images
+            }]
+            
+            # Call Ollama API
+            response = requests.post(
+                "http://localhost:11434/api/chat",
+                json={
+                    "model": model,
+                    "messages": messages,
+                    "stream": False
+                }
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "message" in result and "content" in result["message"]:
+                    return result["message"]["content"]
+                else:
+                    return "Vision processing completed but no content returned"
+            else:
+                logger.error(f"Ollama API error: {response.status_code}")
+                return f"Vision processing error: HTTP {response.status_code}"
+                
+        except Exception as e:
+            logger.error(f"Error in vision processing: {e}")
+            return f"Vision processing error: {str(e)}"
+    
     def _try_fallback_model_tracked(self, prompt: str, failed_model: str, request_id: str) -> Optional[str]:
         """Try fallback model with progress tracking"""
-        fallback_models = ['llama3.2:3b', 'llama3.2:1b', 'llama3:8b', 'llama2:7b']
+        fallback_models = ['Dhenu2-In-Llama3.1-3B-Instruct', 'llama3.2:3b', 'llama3.2:1b']
         
         for fallback in fallback_models:
             if fallback != failed_model and fallback in self.available_local_models:
